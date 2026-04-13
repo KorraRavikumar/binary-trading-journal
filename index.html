@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- PWA Meta Tags -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6366f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BinaryJournal">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!-- Mobile Viewport (should already exist) -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Options Trading Journal Pro</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Install App Banner -->
+<div class="install-banner" id="install-banner" onclick="installApp()">
+    <span>📱</span> Install BinaryJournal as App
+    <button class="install-dismiss" onclick="event.stopPropagation();dismissInstall()">✕</button>
+</div>
+</head>
+<body>
+
+    <!-- ===== WELCOME MODAL ===== -->
+    <div id="welcome-modal" class="modal">
+        <div class="modal-content welcome-modal-content">
+            <div class="welcome-logo">
+                <span class="welcome-logo-icon">⚡</span>
+                <h1>BinaryJournal Pro</h1>
+                <p>Elite Trading Journal - Stay Disciplined & Consistent</p>
+            </div>
+            <div class="welcome-content">
+                <div class="welcome-features">
+                    <div class="welcome-feature"><span>🛑</span><div><strong>Daily Loss Limit</strong><p>Auto-locks on bad days</p></div></div>
+                    <div class="welcome-feature"><span>🧘</span><div><strong>Mood Check</strong><p>Blocks trading when emotional</p></div></div>
+                    <div class="welcome-feature"><span>⏱️</span><div><strong>Cooldown Timer</strong><p>Prevents revenge trading</p></div></div>
+                    <div class="welcome-feature"><span>🏆</span><div><strong>Achievements</strong><p>Gamified milestone tracking</p></div></div>
+                </div>
+                <div class="welcome-actions">
+                    <button class="btn-primary-large" onclick="startFresh()"><span>🚀</span> Start New Journal</button>
+                    <div class="welcome-divider"><span>or</span></div>
+                    <button class="btn-secondary-large" onclick="triggerRestoreBackup()"><span>📂</span> Restore from Backup</button>
+                    <input type="file" id="restore-file-input" accept=".json" style="display:none;" onchange="restoreBackup(event)">
+                </div>
+                <p class="welcome-note">💡 Backup daily to Google Drive or Dropbox!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PRE-SESSION MOOD CHECK MODAL ===== -->
+    <div id="mood-check-modal" class="modal">
+        <div class="modal-content small">
+            <div style="font-size:64px;margin-bottom:16px;">🧘</div>
+            <h3>Pre-Session Check</h3>
+            <p class="modal-message">Before you start trading today, how are you feeling?</p>
+            <div class="pre-session-grid">
+                <button class="pre-session-mood-btn" data-mood="great" onclick="selectSessionMood('great')">
+                    <span>😊</span><span>Great</span><small>Ready to trade!</small>
+                </button>
+                <button class="pre-session-mood-btn" data-mood="good" onclick="selectSessionMood('good')">
+                    <span>🙂</span><span>Good</span><small>Trade carefully</small>
+                </button>
+                <button class="pre-session-mood-btn" data-mood="neutral" onclick="selectSessionMood('neutral')">
+                    <span>😐</span><span>Neutral</span><small>Be extra careful</small>
+                </button>
+                <button class="pre-session-mood-btn" data-mood="stressed" onclick="selectSessionMood('stressed')">
+                    <span>😟</span><span>Stressed</span><small>Avoid trading</small>
+                </button>
+                <button class="pre-session-mood-btn" data-mood="angry" onclick="selectSessionMood('angry')">
+                    <span>😡</span><span>Angry</span><small>DO NOT trade!</small>
+                </button>
+            </div>
+            <div id="mood-warning" style="display:none;margin-top:16px;padding:14px;background:rgba(239,68,68,0.1);border-radius:10px;border-left:4px solid #ef4444;">
+                <strong style="color:#ef4444;" id="mood-warning-text"></strong>
+            </div>
+            <div class="modal-actions" style="margin-top:20px;">
+                <button class="btn-primary" id="mood-confirm-btn" onclick="confirmSessionMood()" disabled>
+                    ✅ Start Trading Session
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DAILY LOSS LIMIT ALERT MODAL ===== -->
+    <div id="loss-limit-modal" class="modal">
+        <div class="modal-content small">
+            <div style="font-size:64px;margin-bottom:16px;">🛑</div>
+            <h3 style="color:#ef4444;">DAILY LOSS LIMIT REACHED!</h3>
+            <p class="modal-message">
+                <strong style="color:#ef4444;">Stop trading for today!</strong><br><br>
+                You have reached your daily loss limit.<br>
+                <span class="telugu-small">మీరు ఈ రోజు మీ నష్ట పరిమితిని చేరుకున్నారు. ఆపండి!</span><br><br>
+                Trading is now <strong>LOCKED</strong> for today.<br>
+                Come back tomorrow with fresh mindset!
+            </p>
+            <div id="loss-limit-details" class="loss-limit-details"></div>
+            <div class="modal-actions">
+                <button class="btn-danger" onclick="closeLossLimitModal()">I Understand - Stop Trading</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== COOLDOWN TIMER MODAL ===== -->
+    <div id="cooldown-modal" class="modal">
+        <div class="modal-content small">
+            <div style="font-size:64px;margin-bottom:10px;">⏱️</div>
+            <h3>Cooldown Period</h3>
+            <p class="modal-message">
+                Take a breath after that loss.<br>
+                <span class="telugu-small">ఆగండి, ఆలోచించండి!</span><br>
+                Next trade unlocks in:
+            </p>
+            <div class="cooldown-timer-display" id="cooldown-timer-display">5:00</div>
+            <div class="cooldown-progress-bar">
+                <div class="cooldown-progress-fill" id="cooldown-progress-fill"></div>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:12px;">
+                💡 Use this time to review why the trade lost
+            </p>
+            <div class="modal-actions" style="margin-top:16px;">
+                <button class="btn-secondary" onclick="skipCooldown()">Skip (Not Recommended)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PROFIT PROTECTION MODAL ===== -->
+    <div id="profit-protection-modal" class="modal">
+        <div class="modal-content small">
+            <div style="font-size:64px;margin-bottom:16px;">🔒</div>
+            <h3 style="color:#22c55e;">Daily Target Exceeded!</h3>
+            <p class="modal-message">
+                <strong style="color:#22c55e;">🎉 Excellent work!</strong><br><br>
+                You've exceeded your daily profit target!<br>
+                Lock in your profits and stop for today?<br><br>
+                <span class="telugu-small">మీ లాభాలను కాపాడుకోండి!</span>
+            </p>
+            <div id="profit-protection-details" class="profit-details"></div>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="lockProfits()">🔒 Lock Profits - Done for Today</button>
+                <button class="btn-secondary" onclick="continueTradingAfterTarget()">Continue Trading (Risk)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== POST TRADE REVIEW MODAL ===== -->
+    <div id="post-trade-modal" class="modal">
+        <div class="modal-content small">
+            <div style="font-size:48px;margin-bottom:12px;">📝</div>
+            <h3>Quick Post-Trade Review</h3>
+            <p class="modal-message">Takes 10 seconds - teaches massively!</p>
+            <div class="post-trade-questions">
+                <div class="post-trade-q">
+                    <span class="post-trade-label">Was my analysis correct?</span>
+                    <div class="post-trade-btns">
+                        <button class="post-btn yes" onclick="selectPostTrade('analysis', true, this)">✅ Yes</button>
+                        <button class="post-btn no" onclick="selectPostTrade('analysis', false, this)">❌ No</button>
+                    </div>
+                </div>
+                <div class="post-trade-q">
+                    <span class="post-trade-label">Did I follow my setup rules?</span>
+                    <div class="post-trade-btns">
+                        <button class="post-btn yes" onclick="selectPostTrade('followed', true, this)">✅ Yes</button>
+                        <button class="post-btn no" onclick="selectPostTrade('followed', false, this)">❌ No</button>
+                    </div>
+                </div>
+                <div class="post-trade-q">
+                    <span class="post-trade-label">Would I take this trade again?</span>
+                    <div class="post-trade-btns">
+                        <button class="post-btn yes" onclick="selectPostTrade('again', true, this)">✅ Yes</button>
+                        <button class="post-btn no" onclick="selectPostTrade('again', false, this)">❌ No</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions" style="margin-top:20px;">
+                <button class="btn-primary" id="post-trade-save-btn" onclick="savePostTradeReview()" disabled>
+                    💾 Save Review
+                </button>
+                <button class="btn-secondary" onclick="skipPostTradeReview()">Skip</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== WEEKLY REVIEW MODAL ===== -->
+    <div id="weekly-review-modal" class="modal">
+        <div class="modal-content large">
+            <button class="modal-close" onclick="closeWeeklyReview()">×</button>
+            <div style="text-align:center;margin-bottom:20px;">
+                <span style="font-size:48px;">📊</span>
+                <h2>Weekly Review</h2>
+                <p style="color:var(--text-secondary)">Your trading summary for this week</p>
+            </div>
+            <div id="weekly-review-content"></div>
+            <div class="form-group" style="margin-top:20px;">
+                <label>🎯 Next Week Focus (What will you improve?)</label>
+                <textarea id="weekly-focus-input" rows="3" placeholder="e.g., Avoid trading after 2 losses, only trade London session..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="saveWeeklyReview()">💾 Save Weekly Review</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TRADING SCHEDULE MODAL ===== -->
+    <div id="schedule-blocked-modal" class="modal">
+        <div class="modal-content small">
+            <div style="font-size:64px;margin-bottom:16px;">🗓️</div>
+            <h3 style="color:#f59e0b;">Rest Day!</h3>
+            <p class="modal-message">
+                <strong>Today is your scheduled rest day.</strong><br><br>
+                No trading allowed today.<br>
+                <span class="telugu-small">ఈ రోజు విశ్రాంతి తీసుకోండి!</span><br><br>
+                Respect your schedule = Long term success!
+            </p>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="closeScheduleBlockedModal()">✅ I'll Rest Today</button>
+                <button class="btn-secondary" onclick="overrideSchedule()">Override (Not Recommended)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ACHIEVEMENT MODAL ===== -->
+    <div id="achievement-modal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-icon success" style="font-size:80px;">🏆</div>
+            <h3 style="color:#f59e0b;" id="achievement-title">Achievement Unlocked!</h3>
+            <p class="modal-message" id="achievement-message"></p>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="closeAchievementModal()">🎉 Awesome!</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">BinaryJournal</span>
+            </div>
+
+            <!-- Session Status Bar -->
+            <div class="session-status-bar" id="session-status-bar">
+                <span id="session-status-icon">⚪</span>
+                <span id="session-status-text">No session started</span>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" onclick="showSection('dashboard')">
+                    <span class="nav-icon">🏠</span><span class="nav-text">Dashboard</span>
+                </button>
+                <button class="nav-item" onclick="showSection('money-management')">
+                    <span class="nav-icon">💰</span><span class="nav-text">Money Management</span>
+                </button>
+                <button class="nav-item" onclick="showSection('analytics')">
+                    <span class="nav-icon">📊</span><span class="nav-text">Binary Analytics</span>
+                </button>
+                <button class="nav-item" onclick="showSection('heatmap')">
+                    <span class="nav-icon">🔥</span><span class="nav-text">Time Heatmap</span>
+                </button>
+                <button class="nav-item" onclick="showSection('calendar')">
+                    <span class="nav-icon">📅</span><span class="nav-text">Calendar</span>
+                </button>
+                <button class="nav-item" onclick="showSection('add-trade')">
+                    <span class="nav-icon">➕</span><span class="nav-text">Add Trade</span>
+                </button>
+                <button class="nav-item" onclick="showSection('all-trades')">
+                    <span class="nav-icon">📋</span><span class="nav-text">All Trades</span>
+                </button>
+                <button class="nav-item" onclick="showSection('setups')">
+                    <span class="nav-icon">📈</span><span class="nav-text">Setups Analysis</span>
+                </button>
+                <button class="nav-item" onclick="showSection('goals')">
+                    <span class="nav-icon">🎯</span><span class="nav-text">Goals & Targets</span>
+                </button>
+                <button class="nav-item" onclick="showSection('weekly-review')">
+                    <span class="nav-icon">📊</span><span class="nav-text">Weekly Review</span>
+                </button>
+                <button class="nav-item" onclick="showSection('diary')">
+                    <span class="nav-icon">📓</span><span class="nav-text">Trading Diary</span>
+                </button>
+                <button class="nav-item" onclick="showSection('rules')">
+                    <span class="nav-icon">📜</span><span class="nav-text">Trading Rules</span>
+                </button>
+                <button class="nav-item" onclick="showSection('schedule')">
+                    <span class="nav-icon">🗓️</span><span class="nav-text">Trading Schedule</span>
+                </button>
+                <button class="nav-item" onclick="showSection('achievements')">
+                    <span class="nav-icon">🏆</span><span class="nav-text">Achievements</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="daily-progress">
+                    <span class="progress-label">Today's Progress</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="sidebar-progress"></div>
+                    </div>
+                    <span class="progress-text" id="sidebar-progress-text">0/10 trades</span>
+                </div>
+
+                <!-- Daily Loss Limit Progress -->
+                <div class="daily-loss-display" id="daily-loss-display">
+                    <span class="loss-display-label">Daily Loss Used</span>
+                    <div class="loss-progress-bar">
+                        <div class="loss-progress-fill" id="loss-progress-fill"></div>
+                    </div>
+                    <span class="loss-display-text" id="loss-display-text">$0.00 / $0.00</span>
+                </div>
+
+                <div class="streak-display">
+                    <span class="streak-label">Current Streak</span>
+                    <div class="streak-icons" id="sidebar-streak-icons">-</div>
+                </div>
+
+                <div class="voice-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="voice-enabled" checked onchange="toggleVoiceAlerts()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">🔊 Voice</span>
+                    <button type="button" class="test-voice-btn" onclick="testVoice()">Test 🔈</button>
+                </div>
+
+                <div class="backup-controls">
+                    <button class="backup-btn save" onclick="downloadBackup()"><span>💾</span><span>Save Backup</span></button>
+                    <button class="backup-btn load" onclick="triggerUploadBackup()"><span>📂</span><span>Load Backup</span></button>
+                    <input type="file" id="backup-file-input" accept=".json" style="display:none;" onchange="uploadBackup(event)">
+                </div>
+
+                <div class="last-saved" id="last-saved"><span>💾 Auto-saved</span></div>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="main-content">
+
+            <!-- ===== DASHBOARD ===== -->
+            <section id="dashboard" class="section active">
+                <div class="section-header">
+                    <div class="section-title-area">
+                        <h1>Dashboard</h1>
+                        <p class="section-subtitle">Your binary options performance at a glance</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="session-start-btn" id="session-start-btn" onclick="startTradingSession()">
+                            🧘 Start Trading Session
+                        </button>
+                        <button class="backup-header-btn" onclick="downloadBackup()"><span>💾</span> Save Backup</button>
+                    </div>
+                </div>
+
+                <!-- Protection Status Bar -->
+                <div class="protection-bar" id="protection-bar">
+                    <div class="protection-item" id="prot-mood">
+                        <span>🧘</span><span>Mood: --</span>
+                    </div>
+                    <div class="protection-item" id="prot-loss">
+                        <span>🛑</span><span>Loss Limit: $0/$0</span>
+                    </div>
+                    <div class="protection-item" id="prot-cooldown">
+                        <span>⏱️</span><span>Cooldown: Ready</span>
+                    </div>
+                    <div class="protection-item" id="prot-profit">
+                        <span>🔒</span><span>Profit Lock: Off</span>
+                    </div>
+                    <div class="protection-item" id="prot-schedule">
+                        <span>🗓️</span><span>Schedule: --</span>
+                    </div>
+                </div>
+
+                <!-- Rules Ticker -->
+                <div class="rules-ticker" id="rules-ticker">
+                    <div class="ticker-content" id="ticker-content">📜 Loading rules...</div>
+                </div>
+
+                <div class="balance-card">
+                    <div class="balance-left">
+                        <span class="balance-label">Total Account Balance</span>
+                        <span class="balance-amount" id="dashboard-balance">$0.00</span>
+                        <div class="balance-change" id="balance-change">
+                            <span class="change-icon">📈</span>
+                            <span class="change-text" id="balance-change-text">+0.00%</span>
+                        </div>
+                    </div>
+                    <div class="balance-right">
+                        <div class="balance-stat">
+                            <span class="stat-label">Today's P&L</span>
+                            <span class="stat-value" id="today-pl">$0.00</span>
+                        </div>
+                        <div class="balance-stat">
+                            <span class="stat-label">Win Rate</span>
+                            <span class="stat-value" id="dashboard-winrate">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Goals -->
+                <div class="dashboard-goals" id="dashboard-goals"></div>
+
+                <div class="quick-stats-grid">
+                    <div class="quick-stat-card green"><div class="quick-stat-icon">✅</div><div class="quick-stat-content"><span class="quick-stat-value" id="total-wins">0</span><span class="quick-stat-label">Total Wins</span></div></div>
+                    <div class="quick-stat-card red"><div class="quick-stat-icon">❌</div><div class="quick-stat-content"><span class="quick-stat-value" id="total-losses">0</span><span class="quick-stat-label">Total Losses</span></div></div>
+                    <div class="quick-stat-card blue"><div class="quick-stat-icon">🎯</div><div class="quick-stat-content"><span class="quick-stat-value" id="best-asset">-</span><span class="quick-stat-label">Best Asset</span></div></div>
+                    <div class="quick-stat-card purple"><div class="quick-stat-icon">⏰</div><div class="quick-stat-content"><span class="quick-stat-value" id="best-expiry">-</span><span class="quick-stat-label">Best Expiry</span></div></div>
+                </div>
+
+                <!-- Win Rate Trend -->
+                <div class="chart-section">
+                    <div class="chart-header"><h3>📈 Win Rate Trend (Weekly)</h3></div>
+                    <div class="chart-wrapper"><canvas id="winRateTrendChart"></canvas></div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card gradient-purple"><div class="stat-icon">💵</div><div class="stat-content"><span class="stat-title">Total P&L</span><span class="stat-number" id="total-pl">$0.00</span></div></div>
+                    <div class="stat-card gradient-blue"><div class="stat-icon">📊</div><div class="stat-content"><span class="stat-title">Total Trades</span><span class="stat-number" id="total-trades">0</span></div></div>
+                    <div class="stat-card gradient-green"><div class="stat-icon">🎯</div><div class="stat-content"><span class="stat-title">Win Rate</span><span class="stat-number" id="win-rate">0%</span></div></div>
+                    <div class="stat-card gradient-orange"><div class="stat-icon">🏆</div><div class="stat-content"><span class="stat-title">Best Day</span><span class="stat-number" id="best-day">$0.00</span></div></div>
+                    <div class="stat-card gradient-pink"><div class="stat-icon">📈</div><div class="stat-content"><span class="stat-title">ROI</span><span class="stat-number" id="roi">0%</span></div></div>
+                    <div class="stat-card gradient-teal"><div class="stat-icon">🔥</div><div class="stat-content"><span class="stat-title">Streak</span><span class="stat-number" id="current-streak-dash">0</span></div></div>
+                </div>
+
+                <!-- Equity Curve -->
+                <div class="chart-section">
+                    <div class="chart-header"><h3>📊 Equity Curve & Drawdown</h3></div>
+                    <div class="chart-wrapper"><canvas id="equityCurveChart"></canvas></div>
+                </div>
+
+                <!-- Risk Reward -->
+                <div class="risk-reward-card" id="risk-reward-card"></div>
+
+                <!-- P&L Chart -->
+                <div class="chart-section">
+                    <div class="chart-header">
+                        <h3>Performance Overview</h3>
+                        <div class="chart-tabs">
+                            <button class="chart-tab active" onclick="updateChartView('daily')">Daily</button>
+                            <button class="chart-tab" onclick="updateChartView('weekly')">Weekly</button>
+                            <button class="chart-tab" onclick="updateChartView('monthly')">Monthly</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper"><canvas id="plChart"></canvas></div>
+                </div>
+
+                <!-- Latest Achievements -->
+                <div class="latest-achievements" id="latest-achievements"></div>
+            </section>
+
+            <!-- ===== MONEY MANAGEMENT ===== -->
+            <section id="money-management" class="section">
+                <div class="section-header">
+                    <h1>💰 Money Management</h1>
+                    <p class="section-subtitle">Track your capital and manage risk</p>
+                </div>
+
+                <div class="mm-overview">
+                    <div class="mm-card primary"><div class="mm-card-icon">💵</div><div class="mm-card-content"><span class="mm-card-label">Current Balance</span><span class="mm-card-value" id="mm-current-balance">$0.00</span></div></div>
+                    <div class="mm-card success"><div class="mm-card-icon">📈</div><div class="mm-card-content"><span class="mm-card-label">Total Deposits</span><span class="mm-card-value" id="mm-total-deposits">$0.00</span></div></div>
+                    <div class="mm-card warning"><div class="mm-card-icon">📉</div><div class="mm-card-content"><span class="mm-card-label">Total Withdrawals</span><span class="mm-card-value" id="mm-total-withdrawals">$0.00</span></div></div>
+                    <div class="mm-card info"><div class="mm-card-icon">💹</div><div class="mm-card-content"><span class="mm-card-label">Trading P&L</span><span class="mm-card-value" id="mm-total-pl">$0.00</span></div></div>
+                </div>
+
+                <div class="mm-row">
+                    <div class="mm-box">
+                        <div class="mm-box-header"><h3>⚙️ Trading Settings</h3></div>
+                        <div class="mm-box-content">
+                            <form id="settings-form">
+                                <div class="form-group">
+                                    <label>🎯 Daily Trade Limit (1-20)</label>
+                                    <input type="number" id="daily-limit" min="1" max="20" value="10">
+                                    <small>Maximum trades allowed per day</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>⚠️ Risk Per Trade (%)</label>
+                                    <input type="number" id="risk-percentage" min="0.5" max="10" step="0.5" value="2" onchange="updateAutoCalculatedAmount()" oninput="updateAutoCalculatedAmount()">
+                                    <small>Percentage of capital to risk per trade</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>🛑 Daily Loss Limit (% of balance)</label>
+                                    <input type="number" id="daily-loss-limit-pct" min="1" max="20" step="0.5" value="6">
+                                    <small>Stop trading when daily loss reaches this % (Recommended: 3x risk per trade)</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>⏱️ Cooldown After Loss (minutes)</label>
+                                    <input type="number" id="cooldown-minutes" min="0" max="30" value="5">
+                                    <small>Wait time before next trade after a loss (0 = disabled)</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>💰 Default Trade Amount ($) <span class="auto-badge">AUTO-CALCULATED</span></label>
+                                    <input type="number" id="default-amount" min="1" step="0.01" value="10" readonly class="auto-calculated-input">
+                                    <div class="calc-formula-box" id="calc-formula">
+                                        <span class="formula-icon">🔢</span>
+                                        <span class="formula-text">$0.00 × 2% = <strong>$0.00</strong></span>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-primary"><span>💾</span> Save Settings</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="mm-box">
+                        <div class="mm-box-header"><h3>💸 Deposits & Withdrawals</h3></div>
+                        <div class="mm-box-content">
+                            <form id="transaction-form">
+                                <div class="transaction-type-selector">
+                                    <button type="button" class="type-btn active" data-type="deposit" onclick="selectTransactionType('deposit')"><span>💰</span> Deposit</button>
+                                    <button type="button" class="type-btn" data-type="withdrawal" onclick="selectTransactionType('withdrawal')"><span>💸</span> Withdrawal</button>
+                                </div>
+                                <input type="hidden" id="transaction-type" value="deposit">
+                                <div class="form-group"><label>Amount ($)</label><input type="number" id="transaction-amount" step="0.01" placeholder="Enter amount" required></div>
+                                <div class="form-group"><label>Date</label><input type="date" id="transaction-date" required></div>
+                                <div class="form-group"><label>Note (Optional)</label><input type="text" id="transaction-note" placeholder="e.g., Monthly deposit"></div>
+                                <button type="submit" class="btn-primary"><span>➕</span> Add Transaction</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mm-box full-width">
+                    <div class="mm-box-header"><h3>📜 Transaction History</h3></div>
+                    <div class="mm-box-content"><div id="transaction-history" class="transaction-list"></div></div>
+                </div>
+
+                <div class="mm-box full-width">
+                    <div class="mm-box-header"><h3>📊 Performance Metrics</h3></div>
+                    <div class="mm-box-content">
+                        <div class="metrics-grid">
+                            <div class="metric-item"><span class="metric-label">Avg Win</span><span class="metric-value positive" id="avg-win">$0.00</span></div>
+                            <div class="metric-item"><span class="metric-label">Avg Loss</span><span class="metric-value negative" id="avg-loss">$0.00</span></div>
+                            <div class="metric-item"><span class="metric-label">Profit Factor</span><span class="metric-value" id="profit-factor">0.00</span></div>
+                            <div class="metric-item"><span class="metric-label">Largest Win</span><span class="metric-value positive" id="largest-win">$0.00</span></div>
+                            <div class="metric-item"><span class="metric-label">Largest Loss</span><span class="metric-value negative" id="largest-loss">$0.00</span></div>
+                            <div class="metric-item"><span class="metric-label">Max Drawdown</span><span class="metric-value negative" id="max-drawdown">$0.00</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mm-box full-width">
+                    <div class="mm-box-header"><h3>📈 Balance Growth</h3></div>
+                    <div class="mm-box-content"><div class="chart-wrapper"><canvas id="balanceChart"></canvas></div></div>
+                </div>
+            </section>
+
+            <!-- ===== ANALYTICS ===== -->
+            <section id="analytics" class="section">
+                <div class="section-header"><h1>📊 Binary Analytics</h1><p class="section-subtitle">Deep insights into your performance</p></div>
+                <div class="analytics-box"><div class="analytics-header"><h3>⏰ Performance by Expiry Time</h3></div><div class="analytics-content"><div id="expiry-analysis" class="expiry-grid"></div></div></div>
+                <div class="analytics-box"><div class="analytics-header"><h3>🌍 Performance by Asset</h3></div><div class="analytics-content"><div id="asset-analysis" class="asset-grid"></div></div></div>
+                <div class="analytics-box"><div class="analytics-header"><h3>⏱️ Performance by Session (IST)</h3></div><div class="analytics-content"><div id="session-analysis" class="session-grid"></div></div></div>
+                <div class="analytics-box"><div class="analytics-header"><h3>📊 Performance by Option Type</h3></div><div class="analytics-content"><div id="option-type-analysis" class="option-type-grid"></div></div></div>
+                <div class="analytics-box"><div class="analytics-header"><h3>🔥 Streak Analysis</h3></div><div class="analytics-content"><div id="streak-analysis" class="streak-stats"></div></div></div>
+            </section>
+
+            <!-- ===== HEATMAP ===== -->
+            <section id="heatmap" class="section">
+                <div class="section-header"><h1>🔥 Time Heatmap</h1><p class="section-subtitle">Best trading hours (IST)</p></div>
+                <div class="heatmap-container" id="heatmap-container"></div>
+                <div class="heatmap-legend">
+                    <span class="heatmap-legend-item"><span class="heatmap-dot strong-profit"></span>Strong Profit</span>
+                    <span class="heatmap-legend-item"><span class="heatmap-dot light-profit"></span>Light Profit</span>
+                    <span class="heatmap-legend-item"><span class="heatmap-dot no-data"></span>No Data</span>
+                    <span class="heatmap-legend-item"><span class="heatmap-dot light-loss"></span>Light Loss</span>
+                    <span class="heatmap-legend-item"><span class="heatmap-dot strong-loss"></span>Strong Loss</span>
+                </div>
+                <div class="heatmap-insights" id="heatmap-insights"></div>
+            </section>
+
+            <!-- ===== CALENDAR ===== -->
+            <section id="calendar" class="section">
+                <div class="section-header"><h1>📅 Trading Calendar</h1><p class="section-subtitle">Visual overview of trading days</p></div>
+                <div class="calendar-container">
+                    <div class="calendar-nav">
+                        <button class="cal-nav-btn" onclick="changeMonth(-1)"><span>←</span></button>
+                        <h2 id="current-month"></h2>
+                        <button class="cal-nav-btn" onclick="changeMonth(1)"><span>→</span></button>
+                    </div>
+                    <div class="calendar-legend">
+                        <div class="legend-item"><span class="legend-dot profit"></span><span>Profitable</span></div>
+                        <div class="legend-item"><span class="legend-dot loss"></span><span>Loss</span></div>
+                        <div class="legend-item"><span class="legend-dot no-trade"></span><span>No Trades</span></div>
+                    </div>
+                    <div id="calendar-grid" class="calendar-grid"></div>
+                </div>
+            </section>
+
+            <!-- ===== ADD TRADE ===== -->
+            <section id="add-trade" class="section">
+                <div class="section-header">
+                    <h1>➕ Add New Trade</h1>
+                    <p class="section-subtitle">Record your binary options trade</p>
+                </div>
+
+                <!-- Cooldown Active Banner -->
+                <div id="cooldown-banner" class="cooldown-banner" style="display:none;">
+                    <span>⏱️</span>
+                    <span>Cooldown active: <strong id="cooldown-banner-time">5:00</strong> - Take a breath!</span>
+                </div>
+
+                <!-- Daily Loss Lock Banner -->
+                <div id="loss-lock-banner" class="loss-lock-banner" style="display:none;">
+                    <span>🛑</span>
+                    <span>Trading LOCKED - Daily loss limit reached! Come back tomorrow.</span>
+                </div>
+
+                <!-- Pre-Trade Checklist -->
+                <div class="checklist-container">
+                    <div class="checklist-header">
+                        <h3>✅ Pre-Trade Checklist</h3>
+                        <p>Complete ALL items before adding a trade</p>
+                        <div class="checklist-progress-bar">
+                            <div class="checklist-progress-fill" id="checklist-progress-fill"></div>
+                        </div>
+                        <span class="checklist-count" id="checklist-count">0/6 completed</span>
+                    </div>
+                    <div class="checklist-items">
+                        <label class="checklist-item"><input type="checkbox" class="checklist-check" onchange="updateChecklistProgress()"><span class="checkmark"></span><span class="checklist-text">📊 I identified a clear setup (not random)</span></label>
+                        <label class="checklist-item"><input type="checkbox" class="checklist-check" onchange="updateChecklistProgress()"><span class="checkmark"></span><span class="checklist-text">📈 I checked the market trend</span></label>
+                        <label class="checklist-item"><input type="checkbox" class="checklist-check" onchange="updateChecklistProgress()"><span class="checkmark"></span><span class="checklist-text">🎯 I identified support/resistance</span></label>
+                        <label class="checklist-item"><input type="checkbox" class="checklist-check" onchange="updateChecklistProgress()"><span class="checkmark"></span><span class="checklist-text">😌 I am emotionally calm</span></label>
+                        <label class="checklist-item"><input type="checkbox" class="checklist-check" onchange="updateChecklistProgress()"><span class="checkmark"></span><span class="checklist-text">💰 Trade amount within risk limits</span></label>
+                        <label class="checklist-item"><input type="checkbox" class="checklist-check" onchange="updateChecklistProgress()"><span class="checkmark"></span><span class="checklist-text">📜 Following my trading plan & rules</span></label>
+                    </div>
+                </div>
+
+                <!-- Status Bar -->
+                <div class="trade-status-bar">
+                    <div class="status-item"><span class="status-icon">💵</span><div class="status-content"><span class="status-label">Balance</span><span class="status-value" id="add-trade-balance">$0.00</span></div></div>
+                    <div class="status-item"><span class="status-icon">⚠️</span><div class="status-content"><span class="status-label">Risk (<span id="risk-pct-display">2</span>%)</span><span class="status-value" id="max-risk-amount">$0.00</span></div></div>
+                    <div class="status-item"><span class="status-icon">🎯</span><div class="status-content"><span class="status-label">Progress</span><span class="status-value" id="daily-progress">0/10</span></div></div>
+                    <div class="status-item"><span class="status-icon">🛑</span><div class="status-content"><span class="status-label">Loss Used</span><span class="status-value" id="loss-used-display" style="color:#ef4444">$0.00</span></div></div>
+                </div>
+
+                <!-- Confidence Meter -->
+                <div class="confidence-meter-container">
+                    <div class="confidence-header">
+                        <h4>🎯 Trade Confidence Level</h4>
+                        <span class="confidence-value-display" id="confidence-display">5/10</span>
+                    </div>
+                    <div class="confidence-btns" id="confidence-btns">
+                        <button type="button" class="conf-btn" data-conf="1" onclick="selectConfidence(1)">1</button>
+                        <button type="button" class="conf-btn" data-conf="2" onclick="selectConfidence(2)">2</button>
+                        <button type="button" class="conf-btn" data-conf="3" onclick="selectConfidence(3)">3</button>
+                        <button type="button" class="conf-btn" data-conf="4" onclick="selectConfidence(4)">4</button>
+                        <button type="button" class="conf-btn" data-conf="5" onclick="selectConfidence(5)">5</button>
+                        <button type="button" class="conf-btn" data-conf="6" onclick="selectConfidence(6)">6</button>
+                        <button type="button" class="conf-btn" data-conf="7" onclick="selectConfidence(7)">7</button>
+                        <button type="button" class="conf-btn" data-conf="8" onclick="selectConfidence(8)">8</button>
+                        <button type="button" class="conf-btn" data-conf="9" onclick="selectConfidence(9)">9</button>
+                        <button type="button" class="conf-btn" data-conf="10" onclick="selectConfidence(10)">10</button>
+                    </div>
+                    <div class="confidence-labels">
+                        <span>😰 Low</span>
+                        <span>😐 Medium</span>
+                        <span>💪 High</span>
+                    </div>
+                </div>
+
+                <!-- Trade Form -->
+                <div class="trade-form-container" id="trade-form-container">
+                    <div class="checklist-blocker" id="checklist-blocker">
+                        <div class="blocker-content">
+                            <span class="blocker-icon">🔒</span>
+                            <h3>Complete Pre-Trade Checklist First</h3>
+                            <p>Check all 6 items above to unlock</p>
+                        </div>
+                    </div>
+                    <form id="trade-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>📅 Trade Date & Time</label>
+                                <input type="datetime-local" id="trade-datetime" required>
+                            </div>
+                            <div class="form-group">
+                                <label>📊 Asset / Market</label>
+                                <select id="trade-asset" required>
+                                    <option value="">Select Asset</option>
+                                    <optgroup label="🌐 Forex (Regular)">
+                                        <option value="EUR/USD">EUR/USD</option><option value="GBP/USD">GBP/USD</option><option value="USD/JPY">USD/JPY</option><option value="AUD/USD">AUD/USD</option><option value="USD/CAD">USD/CAD</option><option value="NZD/USD">NZD/USD</option><option value="EUR/GBP">EUR/GBP</option><option value="EUR/JPY">EUR/JPY</option><option value="GBP/JPY">GBP/JPY</option><option value="USD/CHF">USD/CHF</option>
+                                    </optgroup>
+                                    <optgroup label="🌙 Forex (OTC)">
+                                        <option value="EUR/USD (OTC)">EUR/USD (OTC)</option><option value="GBP/USD (OTC)">GBP/USD (OTC)</option><option value="USD/JPY (OTC)">USD/JPY (OTC)</option><option value="AUD/USD (OTC)">AUD/USD (OTC)</option><option value="EUR/GBP (OTC)">EUR/GBP (OTC)</option><option value="GBP/JPY (OTC)">GBP/JPY (OTC)</option>
+                                    </optgroup>
+                                    <optgroup label="₿ Crypto">
+                                        <option value="BTC/USD">Bitcoin</option><option value="ETH/USD">Ethereum</option><option value="LTC/USD">Litecoin</option>
+                                    </optgroup>
+                                    <optgroup label="🥇 Commodities">
+                                        <option value="GOLD">Gold</option><option value="SILVER">Silver</option><option value="OIL WTI">Oil WTI</option>
+                                    </optgroup>
+                                    <optgroup label="📈 Indices">
+                                        <option value="US500">S&P 500</option><option value="US100">NASDAQ</option><option value="US30">Dow Jones</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>⏰ Expiry Time</label>
+                                <select id="trade-expiry" required>
+                                    <option value="">Select Expiry</option>
+                                    <optgroup label="Turbo"><option value="5s">5 Sec</option><option value="10s">10 Sec</option><option value="15s">15 Sec</option><option value="30s">30 Sec</option><option value="60s">60 Sec</option></optgroup>
+                                    <optgroup label="Short"><option value="2m">2 Min</option><option value="3m">3 Min</option><option value="5m">5 Min</option><option value="10m">10 Min</option><option value="15m">15 Min</option></optgroup>
+                                    <optgroup label="Medium"><option value="30m">30 Min</option><option value="1h">1 Hour</option><option value="4h">4 Hours</option></optgroup>
+                                    <optgroup label="Long"><option value="1d">End of Day</option><option value="1w">End of Week</option></optgroup>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>📈 Option Type</label>
+                                <div class="option-type-selector">
+                                    <button type="button" class="option-btn call" data-type="call" onclick="selectOptionType('call')"><span class="option-icon">📈</span><span class="option-text">CALL</span></button>
+                                    <button type="button" class="option-btn put" data-type="put" onclick="selectOptionType('put')"><span class="option-icon">📉</span><span class="option-text">PUT</span></button>
+                                </div>
+                                <input type="hidden" id="option-type" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>🎯 Setup Name</label>
+                            <div class="setup-selector">
+                                <button type="button" class="setup-btn" data-setup="Greenline Moment" onclick="selectSetup('Greenline Moment')"><span class="setup-icon">🟢</span>Greenline Moment</button>
+                                <button type="button" class="setup-btn" data-setup="Closing below or above Greenline" onclick="selectSetup('Closing below or above Greenline')"><span class="setup-icon">↕️</span>Closing below/above</button>
+                                <button type="button" class="setup-btn" data-setup="Golden Moment" onclick="selectSetup('Golden Moment')"><span class="setup-icon">🌟</span>Golden Moment</button>
+                                <button type="button" class="setup-btn" data-setup="Traffic Line Moment" onclick="selectSetup('Traffic Line Moment')"><span class="setup-icon">🚦</span>Traffic Line</button>
+                            </div>
+                            <input type="hidden" id="trade-setup" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>💰 Trade Amount ($) <span class="auto-badge">SUGGESTED</span></label>
+                                <input type="number" id="trade-amount" step="0.01" min="1" required>
+                                <div class="suggested-amount-box">
+                                    <span>💡 Suggested: </span>
+                                    <strong id="suggested-amount">$0.00</strong>
+                                    <button type="button" class="use-suggested-btn" onclick="useSuggestedAmount()">Use This</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>📊 Result</label>
+                                <div class="result-selector">
+                                    <button type="button" class="result-btn win" data-result="win" onclick="selectResult('win')"><span>✅</span> WIN</button>
+                                    <button type="button" class="result-btn loss" data-result="loss" onclick="selectResult('loss')"><span>❌</span> LOSS</button>
+                                </div>
+                                <input type="hidden" id="trade-result" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>💵 Payout %</label>
+                            <input type="number" id="payout-percentage" step="1" min="50" max="100" value="87">
+                            <small>Typical: 85-92%</small>
+                        </div>
+
+                        <div class="form-group" id="pl-amount-display" style="display:none;">
+                            <label>Net Profit/Loss</label>
+                            <div class="pl-display" id="calculated-pl">$0.00</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>⭐ Grade This Trade</label>
+                            <div class="grade-selector">
+                                <button type="button" class="grade-btn" data-grade="A+" onclick="selectGrade('A+')">A+</button>
+                                <button type="button" class="grade-btn" data-grade="A" onclick="selectGrade('A')">A</button>
+                                <button type="button" class="grade-btn" data-grade="B" onclick="selectGrade('B')">B</button>
+                                <button type="button" class="grade-btn" data-grade="C" onclick="selectGrade('C')">C</button>
+                                <button type="button" class="grade-btn" data-grade="D" onclick="selectGrade('D')">D</button>
+                                <button type="button" class="grade-btn" data-grade="F" onclick="selectGrade('F')">F</button>
+                            </div>
+                            <input type="hidden" id="trade-grade" value="B">
+                        </div>
+
+                        <div class="form-group">
+                            <label>⚠️ Mistake Tags</label>
+                            <div class="mistake-tags-selector">
+                                <button type="button" class="mistake-tag" onclick="toggleMistakeTag(this,'Early Entry')">🏃 Early Entry</button>
+                                <button type="button" class="mistake-tag" onclick="toggleMistakeTag(this,'Late Entry')">🐢 Late Entry</button>
+                                <button type="button" class="mistake-tag" onclick="toggleMistakeTag(this,'Wrong Setup')">❌ Wrong Setup</button>
+                                <button type="button" class="mistake-tag" onclick="toggleMistakeTag(this,'Emotional Trade')">😤 Emotional</button>
+                                <button type="button" class="mistake-tag" onclick="toggleMistakeTag(this,'Revenge Trade')">🔥 Revenge</button>
+                                <button type="button" class="mistake-tag" onclick="toggleMistakeTag(this,'Overtrading')">📈 Overtrading</button>
+                                <button type="button" class="mistake-tag" onclick="toggleMistakeTag(this,'Ignored Rules')">📜 Ignored Rules</button>
+                                <button type="button" class="mistake-tag" onclick="toggleMistakeTag(this,'No Mistake')">✅ No Mistake</button>
+                            </div>
+                            <input type="hidden" id="trade-mistakes" value="">
+                        </div>
+
+                        <div class="form-group">
+                            <label>📸 Screenshot</label>
+                            <div class="file-upload">
+                                <input type="file" id="screenshot" accept="image/*">
+                                <div class="file-upload-label" id="file-label"><span>📷</span><span>Click to upload</span></div>
+                            </div>
+                            <div id="image-preview" class="image-preview"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>📝 Notes</label>
+                            <textarea id="notes" rows="3" placeholder="What did you observe?"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-submit" id="add-trade-submit-btn">
+                            <span>✅</span> Add Trade
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ===== ALL TRADES ===== -->
+            <section id="all-trades" class="section">
+                <div class="section-header">
+                    <div class="section-title-area"><h1>📋 All Trades</h1><p class="section-subtitle">Complete history</p></div>
+                    <div class="header-actions"><button class="pdf-download-btn" onclick="downloadAllTradesPDF()"><span>📄</span> Download PDF</button></div>
+                </div>
+                <div class="trades-toolbar">
+                    <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="search-trades" placeholder="Search..." onkeyup="filterTrades()"></div>
+                    <div class="filter-box"><select id="filter-setup" onchange="filterTrades()"><option value="">All Setups</option><option value="Greenline Moment">Greenline</option><option value="Closing below or above Greenline">Closing below/above</option><option value="Golden Moment">Golden</option><option value="Traffic Line Moment">Traffic Line</option></select></div>
+                    <div class="filter-box"><select id="filter-asset" onchange="filterTrades()"><option value="">All Assets</option></select></div>
+                    <div class="filter-box"><select id="filter-result" onchange="filterTrades()"><option value="">All Results</option><option value="win">Wins</option><option value="loss">Losses</option></select></div>
+                </div>
+                <div id="all-trades-list" class="trades-list"></div>
+            </section>
+
+            <!-- ===== SETUPS ===== -->
+            <section id="setups" class="section">
+                <div class="section-header"><h1>📈 Setups Analysis</h1><p class="section-subtitle">Performance by setup</p></div>
+                <div id="setups-list" class="setups-grid"></div>
+            </section>
+
+            <!-- ===== GOALS ===== -->
+            <section id="goals" class="section">
+                <div class="section-header"><h1>🎯 Goals & Targets</h1><p class="section-subtitle">Auto-calculated from your settings</p></div>
+                <div class="goals-settings">
+                    <div class="mm-box">
+                        <div class="mm-box-header"><h3>⚙️ Set Your Goals</h3></div>
+                        <div class="mm-box-content">
+                            <form id="goals-form">
+                                <div class="goal-input-summary" id="goal-input-summary"></div>
+                                <div class="form-group">
+                                    <label>🎯 Daily Win Target (trades out of <span id="goal-daily-limit-display">10</span>)</label>
+                                    <div class="win-target-selector" id="win-target-selector"></div>
+                                    <div class="win-target-manual">
+                                        <span class="win-target-manual-label">✏️ Or type:</span>
+                                        <input type="number" id="goal-daily-wins-input" min="1" max="20" value="4" onchange="manualWinTarget(this.value)" oninput="manualWinTarget(this.value)" class="win-target-input">
+                                        <span class="win-target-manual-slash">of</span>
+                                        <span class="win-target-manual-limit" id="win-target-limit-display">10</span>
+                                        <span class="win-target-manual-pct" id="win-target-pct-display">(40%)</span>
+                                    </div>
+                                    <input type="hidden" id="goal-daily-wins" value="4">
+                                </div>
+                                <div class="form-group">
+                                    <label>💵 Average Payout %</label>
+                                    <input type="number" id="goal-avg-payout" min="50" max="100" value="87" onchange="autoCalculateGoals()" oninput="autoCalculateGoals()">
+                                </div>
+                                <button type="submit" class="btn-primary"><span>💾</span> Save Goals</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="auto-goals-header"><h3>📊 Auto-Calculated Goals</h3><p>Based on: Balance × Risk % × Win Target × Payout</p></div>
+                <div class="auto-goals-breakdown" id="auto-goals-breakdown"></div>
+                <div class="goals-progress" id="goals-progress"></div>
+            </section>
+
+            <!-- ===== WEEKLY REVIEW ===== -->
+            <section id="weekly-review" class="section">
+                <div class="section-header">
+                    <h1>📊 Weekly Review</h1>
+                    <p class="section-subtitle">Sunday review for consistency</p>
+                    <button class="btn-primary" style="width:auto;padding:10px 20px;" onclick="showWeeklyReviewModal()">📊 Generate This Week's Review</button>
+                </div>
+                <div id="weekly-reviews-list" class="weekly-reviews-list"></div>
+            </section>
+
+            <!-- ===== DIARY ===== -->
+            <section id="diary" class="section">
+                <div class="section-header"><h1>📓 Trading Diary</h1><p class="section-subtitle">Track emotions and mindset</p></div>
+                <div class="diary-form-container">
+                    <form id="diary-form">
+                        <div class="form-group"><label>📅 Date</label><input type="date" id="diary-date" required></div>
+                        <div class="form-group">
+                            <label>😊 Mood Before Trading</label>
+                            <div class="mood-selector">
+                                <button type="button" class="mood-btn" data-mood="great" onclick="selectMood('before','great')"><span>😊</span><span>Great</span></button>
+                                <button type="button" class="mood-btn" data-mood="good" onclick="selectMood('before','good')"><span>🙂</span><span>Good</span></button>
+                                <button type="button" class="mood-btn" data-mood="neutral" onclick="selectMood('before','neutral')"><span>😐</span><span>Neutral</span></button>
+                                <button type="button" class="mood-btn" data-mood="stressed" onclick="selectMood('before','stressed')"><span>😟</span><span>Stressed</span></button>
+                                <button type="button" class="mood-btn" data-mood="angry" onclick="selectMood('before','angry')"><span>😡</span><span>Angry</span></button>
+                            </div>
+                            <input type="hidden" id="mood-before" value="">
+                        </div>
+                        <div class="form-group">
+                            <label>😴 Sleep Quality</label>
+                            <div class="sleep-selector">
+                                <button type="button" class="sleep-btn" data-sleep="5" onclick="selectSleep(5)"><span>⭐⭐⭐⭐⭐</span><span>Excellent</span></button>
+                                <button type="button" class="sleep-btn" data-sleep="4" onclick="selectSleep(4)"><span>⭐⭐⭐⭐</span><span>Good</span></button>
+                                <button type="button" class="sleep-btn" data-sleep="3" onclick="selectSleep(3)"><span>⭐⭐⭐</span><span>Average</span></button>
+                                <button type="button" class="sleep-btn" data-sleep="2" onclick="selectSleep(2)"><span>⭐⭐</span><span>Poor</span></button>
+                                <button type="button" class="sleep-btn" data-sleep="1" onclick="selectSleep(1)"><span>⭐</span><span>Terrible</span></button>
+                            </div>
+                            <input type="hidden" id="sleep-quality" value="">
+                        </div>
+                        <div class="form-group">
+                            <label>🧠 Stress Level</label>
+                            <div class="stress-selector">
+                                <button type="button" class="stress-btn" data-stress="low" onclick="selectStress('low')"><span>🟢</span><span>Low</span></button>
+                                <button type="button" class="stress-btn" data-stress="medium" onclick="selectStress('medium')"><span>🟡</span><span>Medium</span></button>
+                                <button type="button" class="stress-btn" data-stress="high" onclick="selectStress('high')"><span>🔴</span><span>High</span></button>
+                            </div>
+                            <input type="hidden" id="stress-level" value="">
+                        </div>
+                        <div class="form-group"><label>📝 What went well?</label><textarea id="diary-positive" rows="2" placeholder="My best decisions..."></textarea></div>
+                        <div class="form-group"><label>⚠️ What mistakes?</label><textarea id="diary-mistakes" rows="2" placeholder="Where I went wrong..."></textarea></div>
+                        <div class="form-group"><label>🎯 What will I do differently?</label><textarea id="diary-improvement" rows="2" placeholder="My improvement plan..."></textarea></div>
+                        <div class="form-group">
+                            <label>⭐ Discipline Rating</label>
+                            <div class="discipline-selector">
+                                <button type="button" class="disc-btn" data-disc="5" onclick="selectDiscipline(5)">⭐⭐⭐⭐⭐</button>
+                                <button type="button" class="disc-btn" data-disc="4" onclick="selectDiscipline(4)">⭐⭐⭐⭐</button>
+                                <button type="button" class="disc-btn" data-disc="3" onclick="selectDiscipline(3)">⭐⭐⭐</button>
+                                <button type="button" class="disc-btn" data-disc="2" onclick="selectDiscipline(2)">⭐⭐</button>
+                                <button type="button" class="disc-btn" data-disc="1" onclick="selectDiscipline(1)">⭐</button>
+                            </div>
+                            <input type="hidden" id="discipline-rating" value="">
+                        </div>
+                        <button type="submit" class="btn-submit"><span>📓</span> Save Entry</button>
+                    </form>
+                </div>
+                <div class="diary-history" id="diary-history"></div>
+            </section>
+
+            <!-- ===== RULES ===== -->
+            <section id="rules" class="section">
+                <div class="section-header"><h1>📜 Trading Rules</h1><p class="section-subtitle">Always visible while trading</p></div>
+                <div class="rules-editor">
+                    <div class="mm-box">
+                        <div class="mm-box-header"><h3>✏️ Edit Rules</h3></div>
+                        <div class="mm-box-content">
+                            <form id="rules-form">
+                                <div id="rules-list-editor"></div>
+                                <div class="rules-add-row">
+                                    <input type="text" id="new-rule-input" placeholder="Type new rule..." class="rule-input">
+                                    <button type="button" class="btn-add-rule" onclick="addNewRule()">➕ Add</button>
+                                </div>
+                                <button type="submit" class="btn-primary"><span>💾</span> Save Rules</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="rules-display" id="rules-display"></div>
+                <div class="mm-box full-width" style="margin-top:20px;">
+                    <div class="mm-box-header"><h3>📊 Rules Compliance</h3></div>
+                    <div class="mm-box-content"><div id="rules-compliance"></div></div>
+                </div>
+            </section>
+
+            <!-- ===== TRADING SCHEDULE ===== -->
+            <section id="schedule" class="section">
+                <div class="section-header"><h1>🗓️ Trading Schedule</h1><p class="section-subtitle">Set your trading days and hours</p></div>
+                <div class="mm-box">
+                    <div class="mm-box-header"><h3>📅 Weekly Schedule</h3></div>
+                    <div class="mm-box-content">
+                        <form id="schedule-form">
+                            <div class="schedule-grid" id="schedule-grid"></div>
+                            <button type="submit" class="btn-primary" style="margin-top:20px;"><span>💾</span> Save Schedule</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="schedule-display" id="schedule-display"></div>
+            </section>
+
+            <!-- ===== ACHIEVEMENTS ===== -->
+            <section id="achievements" class="section">
+                <div class="section-header"><h1>🏆 Achievements</h1><p class="section-subtitle">Track your milestones</p></div>
+                <div class="achievements-stats" id="achievements-stats"></div>
+                <div class="achievements-grid" id="achievements-grid"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ===== MODALS ===== -->
+    <div id="day-modal" class="modal">
+        <div class="modal-content large">
+            <button class="modal-close" onclick="closeDayModal()">×</button>
+            <h2 id="modal-date"></h2>
+            <div class="modal-stats">
+                <div class="modal-stat"><span class="modal-stat-label">Trades</span><span class="modal-stat-value" id="modal-total-trades">0</span></div>
+                <div class="modal-stat"><span class="modal-stat-label">Wins</span><span class="modal-stat-value positive" id="modal-profitable">0</span></div>
+                <div class="modal-stat"><span class="modal-stat-label">Losses</span><span class="modal-stat-value negative" id="modal-losses">0</span></div>
+                <div class="modal-stat"><span class="modal-stat-label">P&L</span><span class="modal-stat-value" id="modal-pl">$0.00</span></div>
+            </div>
+            <div id="modal-trades-list" class="modal-trades"></div>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-icon warning">⚠️</div>
+            <h3>Delete Trade?</h3><p>Cannot be undone.</p>
+            <div class="modal-actions"><button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button><button class="btn-danger" onclick="confirmDelete()">Delete</button></div>
+        </div>
+    </div>
+
+    <div id="delete-transaction-modal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-icon warning">⚠️</div>
+            <h3>Delete Transaction?</h3><p>Affects balance.</p>
+            <div class="modal-actions"><button class="btn-secondary" onclick="closeDeleteTransactionModal()">Cancel</button><button class="btn-danger" onclick="confirmDeleteTransaction()">Delete</button></div>
+        </div>
+    </div>
+
+    <div id="loss-warning-modal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-icon danger">⚠️</div>
+            <div class="voice-indicator" id="voice-indicator" style="display:none;"><span class="voice-wave">🔊</span><span>Speaking...</span></div>
+            <h3 style="color:#ef4444;">Discipline Reminder</h3>
+            <p class="telugu-text">క్రమశిక్షణ రిమైండర్</p>
+            <p class="modal-message">
+                <strong>No rush, keep watching!</strong><br>
+                <span class="telugu-small">తొందరపడకండి!</span><br><br>
+                <span style="color:#ef4444;font-weight:bold;">⛔ Do NOT use Martingale!</span><br>
+                <span class="telugu-small" style="color:#ef4444;">⛔ మార్టింగేల్ వాడకండి!</span>
+            </p>
+            <div id="loss-streak-warning" style="display:none;margin:16px 0;padding:12px;background:rgba(239,68,68,0.1);border-radius:8px;border-left:4px solid #ef4444;">
+                <strong style="color:#ef4444;">⚠️ Loss Streak!</strong>
+                <p style="color:#ef4444;">Lost <span id="consecutive-losses">0</span> in a row<br><span id="consecutive-losses-telugu">0</span> ట్రేడ్‌లు ఓడిపోయారు</p>
+            </div>
+            <div class="modal-actions"><button class="btn-secondary" onclick="closeLossWarningModal()">Cancel</button><button class="btn-primary" onclick="confirmLossWarning()">I Understand, Save</button></div>
+            <button class="replay-voice-btn" onclick="replayTeluguVoice()">🔊 Replay Voice</button>
+        </div>
+    </div>
+
+    <div id="congrats-modal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-icon success">🎉</div>
+            <h3 style="color:#22c55e;">Daily Target Done!</h3>
+            <p class="modal-message">Take a break and come back stronger tomorrow!</p>
+            <div class="modal-actions"><button class="btn-primary" onclick="closeCongratsModal()">🏆 Done for Today</button></div>
+        </div>
+    </div>
+
+    <div id="backup-success-modal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-icon success">✅</div>
+            <h3 style="color:#22c55e;">Backup Saved!</h3>
+            <p class="modal-message">Upload to Google Drive or Dropbox!</p>
+            <div class="modal-actions"><button class="btn-primary" onclick="closeBackupSuccessModal()">Got It!</button></div>
+        </div>
+    </div>
+
+    <div id="restore-success-modal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-icon success">🎉</div>
+            <h3 style="color:#22c55e;">Restored!</h3>
+            <p class="modal-message" id="restore-message">Restored successfully!</p>
+            <div class="modal-actions"><button class="btn-primary" onclick="closeRestoreSuccessModal()">Continue</button></div>
+        </div>
+    </div>
+
+    <script src="app-binary.js"></script>
+</body>
+</html>
