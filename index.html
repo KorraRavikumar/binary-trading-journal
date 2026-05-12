@@ -675,15 +675,117 @@
                             </div>
                             <div class="form-group">
                                 <label>📊 Asset / Market</label>
-                                <select id="trade-asset" required>
-                                    <option value="">Select Asset</option>
-                                    <optgroup label="🌐 Forex (Regular)">
-                                        <option value="EUR/USD">EUR/USD</option><option value="GBP/USD">GBP/USD</option><option value="USD/JPY">USD/JPY</option><option value="AUD/USD">AUD/USD</option><option value="USD/CAD">USD/CAD</option><option value="NZD/USD">NZD/USD</option><option value="EUR/GBP">EUR/GBP</option><option value="EUR/JPY">EUR/JPY</option><option value="GBP/JPY">GBP/JPY</option><option value="USD/CHF">USD/CHF</option>
-                                    </optgroup>
-                                    <optgroup label="🌙 Forex (OTC)">
-                                        <option value="EUR/USD (OTC)">EUR/USD (OTC)</option><option value="AUD/CAD (OTC)">AUD/CAD (OTC)</option><option value="GBP/USD (OTC)">GBP/USD (OTC)</option><option value="USD/JPY (OTC)">USD/JPY (OTC)</option><option value="AUD/USD (OTC)">AUD/USD (OTC)</option><option value="EUR/GBP (OTC)">EUR/GBP (OTC)</option><option value="GBP/JPY (OTC)">GBP/JPY (OTC)</option>
-                                    </optgroup>
-                                    <optgroup label="₿ Crypto">
+<select id="trade-asset" required>
+    <option value="">Select Asset</option>
+
+    <!-- OTC PAIRS -->
+    <optgroup label="🌙 Forex OTC">
+        <option value="AUD/CAD OTC">AUD/CAD OTC</option>
+        <option value="AUD/NZD OTC">AUD/NZD OTC</option>
+        <option value="AUD/USD OTC">AUD/USD OTC</option>
+        <option value="EUR/CHF OTC">EUR/CHF OTC</option>
+        <option value="EUR/GBP OTC">EUR/GBP OTC</option>
+        <option value="EUR/USD OTC">EUR/USD OTC</option>
+        <option value="JOD/CNY OTC">JOD/CNY OTC</option>
+        <option value="QAR/CNY OTC">QAR/CNY OTC</option>
+        <option value="USD/BRL OTC">USD/BRL OTC</option>
+        <option value="CAD/CHF OTC">CAD/CHF OTC</option>
+        <option value="LBP/USD OTC">LBP/USD OTC</option>
+        <option value="USD/ARS OTC">USD/ARS OTC</option>
+        <option value="USD/MYR OTC">USD/MYR OTC</option>
+        <option value="SAR/CNY OTC">SAR/CNY OTC</option>
+        <option value="EUR/RUB OTC">EUR/RUB OTC</option>
+        <option value="EUR/TRY OTC">EUR/TRY OTC</option>
+        <option value="YER/USD OTC">YER/USD OTC</option>
+        <option value="TND/USD OTC">TND/USD OTC</option>
+        <option value="KES/USD OTC">KES/USD OTC</option>
+        <option value="USD/PHP OTC">USD/PHP OTC</option>
+        <option value="USD/CAD OTC">USD/CAD OTC</option>
+        <option value="CHF/JPY OTC">CHF/JPY OTC</option>
+        <option value="UAH/USD OTC">UAH/USD OTC</option>
+        <option value="GBP/JPY OTC">GBP/JPY OTC</option>
+        <option value="MAD/USD OTC">MAD/USD OTC</option>
+        <option value="NZD/JPY OTC">NZD/JPY OTC</option>
+        <option value="USD/PKR OTC">USD/PKR OTC</option>
+        <option value="AED/CNY OTC">AED/CNY OTC</option>
+        <option value="EUR/JPY OTC">EUR/JPY OTC</option>
+        <option value="USD/CNH OTC">USD/CNH OTC</option>
+        <option value="AUD/CHF OTC">AUD/CHF OTC</option>
+        <option value="USD/MXN OTC">USD/MXN OTC</option>
+        <option value="USD/BDT OTC">USD/BDT OTC</option>
+        <option value="USD/INR OTC">USD/INR OTC</option>
+        <option value="USD/VND OTC">USD/VND OTC</option>
+        <option value="OMR/CNY OTC">OMR/CNY OTC</option>
+        <option value="BHD/CNY OTC">BHD/CNY OTC</option>
+        <option value="EUR/NZD OTC">EUR/NZD OTC</option>
+        <option value="NGN/USD OTC">NGN/USD OTC</option>
+        <option value="USD/COP OTC">USD/COP OTC</option>
+        <option value="ZAR/USD OTC">ZAR/USD OTC</option>
+        <option value="EUR/HUF OTC">EUR/HUF OTC</option>
+        <option value="USD/CHF OTC">USD/CHF OTC</option>
+        <option value="USD/EGP OTC">USD/EGP OTC</option>
+        <option value="USD/RUB OTC">USD/RUB OTC</option>
+        <option value="USD/SGD OTC">USD/SGD OTC</option>
+        <option value="USD/JPY OTC">USD/JPY OTC</option>
+        <option value="AUD/JPY OTC">AUD/JPY OTC</option>
+        <option value="CAD/JPY OTC">CAD/JPY OTC</option>
+        <option value="NZD/USD OTC">NZD/USD OTC</option>
+        <option value="USD/IDR OTC">USD/IDR OTC</option>
+        <option value="USD/DZD OTC">USD/DZD OTC</option>
+        <option value="GBP/USD OTC">GBP/USD OTC</option>
+        <option value="GBP/AUD OTC">GBP/AUD OTC</option>
+        <option value="CHF/NOK OTC">CHF/NOK OTC</option>
+        <option value="USD/CLP OTC">USD/CLP OTC</option>
+        <option value="USD/THB OTC">USD/THB OTC</option>
+    </optgroup>
+
+    <!-- REGULAR PAIRS -->
+    <optgroup label="🌐 Forex Regular">
+        <option value="AUD/JPY">AUD/JPY</option>
+        <option value="AUD/USD">AUD/USD</option>
+        <option value="CAD/JPY">CAD/JPY</option>
+        <option value="USD/CAD">USD/CAD</option>
+        <option value="AUD/CHF">AUD/CHF</option>
+        <option value="CAD/CHF">CAD/CHF</option>
+        <option value="GBP/JPY">GBP/JPY</option>
+        <option value="AUD/CAD">AUD/CAD</option>
+        <option value="CHF/JPY">CHF/JPY</option>
+        <option value="EUR/AUD">EUR/AUD</option>
+        <option value="EUR/CHF">EUR/CHF</option>
+        <option value="USD/JPY">USD/JPY</option>
+        <option value="GBP/AUD">GBP/AUD</option>
+        <option value="EUR/GBP">EUR/GBP</option>
+        <option value="EUR/JPY">EUR/JPY</option>
+        <option value="EUR/USD">EUR/USD</option>
+        <option value="GBP/CAD">GBP/CAD</option>
+        <option value="GBP/CHF">GBP/CHF</option>
+        <option value="GBP/USD">GBP/USD</option>
+        <option value="USD/CHF">USD/CHF</option>
+        <option value="EUR/CAD">EUR/CAD</option>
+    </optgroup>
+
+    <!-- CRYPTO -->
+    <optgroup label="₿ Crypto">
+        <option value="BTC/USD">Bitcoin</option>
+        <option value="ETH/USD">Ethereum</option>
+        <option value="LTC/USD">Litecoin</option>
+    </optgroup>
+
+    <!-- COMMODITIES -->
+    <optgroup label="🥇 Commodities">
+        <option value="GOLD">Gold</option>
+        <option value="SILVER">Silver</option>
+        <option value="OIL WTI">Oil WTI</option>
+    </optgroup>
+
+    <!-- INDICES -->
+    <optgroup label="📈 Indices">
+        <option value="US500">S&P 500</option>
+        <option value="US100">NASDAQ</option>
+        <option value="US30">Dow Jones</option>
+    </optgroup>
+
+</select>                                    <optgroup label="₿ Crypto">
                                         <option value="BTC/USD">Bitcoin</option><option value="ETH/USD">Ethereum</option><option value="LTC/USD">Litecoin</option>
                                     </optgroup>
                                     <optgroup label="🥇 Commodities">
